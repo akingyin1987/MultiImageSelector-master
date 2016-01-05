@@ -71,6 +71,7 @@ public class ImageViewPageAdapter  extends PagerAdapter {
 
     @Override
     public Object instantiateItem(ViewGroup container, int position) {
+        System.out.println("postion==="+position);
         ViewHolder  holde = mImageViews[position % mImageViews.length];
         Image  image = images.get(position);
         if(null == holde){
@@ -81,7 +82,8 @@ public class ImageViewPageAdapter  extends PagerAdapter {
             ((ViewPager)container).addView(view, 0);
             mImageViews[position % mImageViews.length]=holde;
         }
-        Picasso.with(context)
+        Picasso
+             .with(context)
             .load(new File(image.path))
             .placeholder(R.drawable.default_error)
             .error(R.drawable.default_error)

@@ -1,6 +1,6 @@
 package me.nereo.multi_image_selector;
 
-import android.app.Activity;
+
 import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -90,7 +90,7 @@ public class MulitImageBrowseActivity  extends FragmentActivity {
                         Image image = new Image(path, name, dateTime);
                         images.add(image);
                     }while(data.moveToNext());
-
+                    System.out.println("size==="+images.size());
                     adapter.setData(images);
                     hasFolderGened = true;
 
