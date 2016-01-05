@@ -1,10 +1,12 @@
 package me.nereo.multi_image_selector.bean;
 
+import java.io.Serializable;
+
 /**
  * 图片实体
  * Created by Nereo on 2015/4/7.
  */
-public class Image {
+public class Image  implements Serializable{
     public String path;
     public String name;
     public long time;

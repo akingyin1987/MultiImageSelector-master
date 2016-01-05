@@ -40,6 +40,7 @@ import me.nereo.multi_image_selector.adapter.FolderAdapter;
 import me.nereo.multi_image_selector.adapter.ImageGridAdapter;
 import me.nereo.multi_image_selector.bean.Folder;
 import me.nereo.multi_image_selector.bean.Image;
+import me.nereo.multi_image_selector.bean.Images;
 import me.nereo.multi_image_selector.utils.FileUtils;
 import me.nereo.multi_image_selector.utils.TimeUtils;
 
@@ -180,7 +181,11 @@ public class MultiImageSelectorFragment extends Fragment {
             public void onClick(View view) {
                 // TODO 预览
                 Intent  intent = new Intent(getActivity(),MulitImageBrowseActivity.class);
-                startActivityForResult(intent,2);
+                List<Image>  selectedImages= mImageAdapter.getmSelectedImages();
+                Images   images  = new Images();
+                images.setImages(selectedImages);
+                intent.putExtra("selected",images);
+                startActivityForResult(intent, 2);
             }
         });
 
@@ -527,6 +532,13 @@ public class MultiImageSelectorFragment extends Fragment {
 
         }
     };
+
+
+    @Override
+    public void startActivityForResult(Intent intent, int requestCode) {
+        super.startActivityForResult(intent, requestCode);
+
+    }
 
     /**
      * 回调接口

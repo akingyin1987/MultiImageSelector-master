@@ -9,7 +9,11 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.view.ViewPager;
+import android.widget.AbsListView;
+import android.widget.TextView;
 
+
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +21,7 @@ import java.util.List;
 import me.nereo.multi_image_selector.adapter.ImageViewPageAdapter;
 
 import me.nereo.multi_image_selector.bean.Image;
+import me.nereo.multi_image_selector.bean.Images;
 
 /**
  * Created by zlcd on 2016/1/5.
@@ -36,13 +41,33 @@ public class MulitImageBrowseActivity  extends FragmentActivity {
 
     public ViewPager    viewPager;
 
+    public TextView  tv_left;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Images   images = (Images)getIntent().getSerializableExtra("selected");
         setContentView(R.layout.activity_viewpage_select);
         viewPager = (ViewPager)findViewById(R.id.view_pager);
+        tv_left = (TextView)findViewById(R.id.tv_left);
+        viewPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+                 tv_left.setText((position+1)+"/"+adapter.getCount());
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+
+            }
+        });
         adapter=new ImageViewPageAdapter(this,null);
         viewPager.setAdapter(adapter);
+        adapter.setmSelectedImages(images.getImages());
         getSupportLoaderManager().initLoader(LOADER_ALL, null, mLoaderCallback);
     }
 
@@ -91,8 +116,13 @@ public class MulitImageBrowseActivity  extends FragmentActivity {
                         images.add(image);
                     }while(data.moveToNext());
                     System.out.println("size==="+images.size());
+
                     adapter.setData(images);
                     hasFolderGened = true;
+                    if(adapter.getmSelectedImages().size()>0){
+                        int postion = getSelectPostion(images,adapter.getmSelectedImages().get(0));
+                        viewPager.setCurrentItem(postion);
+                    }
 
                 }
             }
@@ -103,4 +133,19 @@ public class MulitImageBrowseActivity  extends FragmentActivity {
 
         }
     };
+
+
+    public   int   getSelectPostion(List<Image> items,Image  image){
+        int  postion = 0;
+        for(Image  image1 : items){
+            if(image1.equals(image)){
+                return  postion;
+            }
+            postion++;
+        }
+        return  postion;
+
+    }
+
+
 }

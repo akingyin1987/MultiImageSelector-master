@@ -37,6 +37,14 @@ public class ImageGridAdapter extends BaseAdapter {
     private List<Image> mImages = new ArrayList<>();
     private List<Image> mSelectedImages = new ArrayList<>();
 
+    public List<Image> getmSelectedImages() {
+        return mSelectedImages;
+    }
+
+    public void setmSelectedImages(List<Image> mSelectedImages) {
+        this.mSelectedImages = mSelectedImages;
+    }
+
     private int mItemSize;
     private GridView.LayoutParams mItemLayoutParams;
 
