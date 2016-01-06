@@ -2,15 +2,10 @@ package me.nereo.multi_image_selector;
 
 
 import android.content.Intent;
-import android.database.Cursor;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
 import android.support.v4.view.ViewPager;
-
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -51,6 +46,7 @@ public class MulitImageBrowseActivity  extends FragmentActivity implements Multi
         super.onCreate(savedInstanceState);
         Images   images = (Images)getIntent().getSerializableExtra("selected");
         Images   preiveimages = (Images)getIntent().getSerializableExtra("previe");
+        Image   temp = (Image)getIntent().getSerializableExtra("frist");
         setContentView(R.layout.activity_viewpage_select);
         viewPager = (ViewPager)findViewById(R.id.view_pager);
         tv_left = (TextView)findViewById(R.id.tv_left);
@@ -59,10 +55,10 @@ public class MulitImageBrowseActivity  extends FragmentActivity implements Multi
         commit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Images   images1 = new Images();
+                Images images1 = new Images();
                 images1.setImages(adapter.getmSelectedImages());
-                Intent  intent = new Intent();
-                intent.putExtra("result",images1);
+                Intent intent = new Intent();
+                intent.putExtra("result", images1);
                 setResult(RESULT_OK, intent);
                 finish();
             }
@@ -93,10 +89,11 @@ public class MulitImageBrowseActivity  extends FragmentActivity implements Multi
         }else{
             commit.setText("完成("+images.getImages().size()+"/"+MultiImageSelectorFragment.mDesireImageCount+")");
         }
+        System.out.println("prive="+preiveimages.getImages().size());
         adapter.setData(preiveimages.getImages());
-
+        System.out.println("tem="+(null ==temp));
         if(adapter.getmSelectedImages().size()>0){
-            int postion = getSelectPostion(preiveimages.getImages(),adapter.getmSelectedImages().get(0));
+            int postion = getSelectPostion(preiveimages.getImages(),null == temp?adapter.getmSelectedImages().get(0):temp);
             viewPager.setCurrentItem(postion);
         }
     }
@@ -140,5 +137,27 @@ public class MulitImageBrowseActivity  extends FragmentActivity implements Multi
     @Override
     public void onCameraShot(File imageFile) {
 
+    }
+
+    @Override
+    public void onAllResult(List<Image> images) {
+
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        System.out.println("返回");
+        if(keyCode == KeyEvent.KEYCODE_BACK ){
+            System.out.println("返回");
+            Images images1 = new Images();
+            images1.setImages(adapter.getmSelectedImages());
+            Intent intent = new Intent();
+            intent.putExtra("result", images1);
+            setResult(RESULT_CANCELED, intent);
+            finish();
+
+            return  true;
+        }
+        return super.onKeyDown(keyCode, event);
     }
 }

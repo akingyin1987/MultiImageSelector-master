@@ -83,6 +83,23 @@ public class ImageViewPageAdapter  extends PagerAdapter {
         notifyDataSetChanged();
     }
 
+    public  void   addSelectItem(Image  item){
+       for(Image  image : mSelectedImages){
+           if(item.equals(image)){
+               break;
+           }
+       }
+        mSelectedImages.add(item);
+    }
+
+    public  void  removeSelectItem(Image item){
+        for (Image  image : mSelectedImages){
+            if(item.equals(image)){
+                mSelectedImages.remove(image);
+                break;
+            }
+        }
+    }
 
 
     @Override
@@ -118,27 +135,27 @@ public class ImageViewPageAdapter  extends PagerAdapter {
             holde.checkBox.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if(mSelectedImages.contains(image)){
-                        System.out.println("已存在");
-                        mSelectedImages.remove(image);
-                        if(null != callback){
-                            callback.onImageSelected(null);
-                        }
-                    }else{
-                        if(mSelectedImages.size() >= maxSize){
+                    for(Image  item : mSelectedImages){
+                        if(item.equals(image)){
+                            mSelectedImages.remove(item);
                             if(null != callback){
-                                callback.onImageUnselected(null);
+                                callback.onImageSelected(null);
                             }
                             return;
                         }
-                        mSelectedImages.add(image);
-                        System.out.println("不存在");
-                        if(null != callback){
-                            callback.onImageSelected(null);
-                        }
-
-
                     }
+                    if(mSelectedImages.size() >= maxSize){
+                        if(null != callback){
+                            callback.onImageUnselected(null);
+                        }
+                        return;
+                    }
+                    mSelectedImages.add(image);
+                    System.out.println("不存在");
+                    if(null != callback){
+                        callback.onImageSelected(null);
+                    }
+
                 }
             });
             holde.imageView=(ImageView)view.findViewById(R.id.image);

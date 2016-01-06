@@ -16,6 +16,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import me.nereo.multi_image_selector.ACallback;
+import me.nereo.multi_image_selector.MultiImageSelectorFragment;
 import me.nereo.multi_image_selector.R;
 import me.nereo.multi_image_selector.bean.Image;
 
@@ -43,6 +45,16 @@ public class ImageGridAdapter extends BaseAdapter {
 
     public void setmSelectedImages(List<Image> mSelectedImages) {
         this.mSelectedImages = mSelectedImages;
+    }
+
+    private ACallback  callback;
+
+    public ACallback getCallback() {
+        return callback;
+    }
+
+    public void setCallback(ACallback callback) {
+        this.callback = callback;
     }
 
     public List<Image> getmImages() {
@@ -189,7 +201,7 @@ public class ImageGridAdapter extends BaseAdapter {
     }
 
     @Override
-    public View getView(int i, View view, ViewGroup viewGroup) {
+    public View getView(final  int i, View view, ViewGroup viewGroup) {
 
         int type = getItemViewType(i);
         if(type == TYPE_CAMERA){
@@ -200,6 +212,14 @@ public class ImageGridAdapter extends BaseAdapter {
             if(view == null){
                 view = mInflater.inflate(R.layout.list_item_image, viewGroup, false);
                 holde = new ViewHolde(view);
+                holde.indicator.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if(null !=callback){
+                            callback.onSelectItem(i);
+                        }
+                    }
+                });
             }else{
                 holde = (ViewHolde) view.getTag();
                 if(holde == null){
@@ -225,16 +245,19 @@ public class ImageGridAdapter extends BaseAdapter {
         ImageView image;
         ImageView indicator;
         View mask;
+         Image   imagebean;
 
         ViewHolde(View view){
             image = (ImageView) view.findViewById(R.id.image);
             indicator = (ImageView) view.findViewById(R.id.checkmark);
             mask = view.findViewById(R.id.mask);
             view.setTag(this);
+
         }
 
-        void bindData(final Image data){
-            if(data == null) return;
+        void bindData( Image data){
+            imagebean = data;
+            if(imagebean == null) return;
             // 处理单选和多选状态
             if(showSelectIndicator){
                 indicator.setVisibility(View.VISIBLE);
@@ -250,7 +273,7 @@ public class ImageGridAdapter extends BaseAdapter {
             }else{
                 indicator.setVisibility(View.GONE);
             }
-            File imageFile = new File(data.path);
+            File imageFile = new File(imagebean.path);
 
             if(mItemSize > 0) {
                 // 显示图片

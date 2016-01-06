@@ -48,7 +48,7 @@ import me.nereo.multi_image_selector.utils.TimeUtils;
  * 图片选择Fragment
  * Created by Nereo on 2015/4/7.
  */
-public class MultiImageSelectorFragment extends Fragment {
+public class MultiImageSelectorFragment extends Fragment implements ACallback {
 
     private static final String TAG = "MultiImageSelector";
 
@@ -225,6 +225,7 @@ public class MultiImageSelectorFragment extends Fragment {
             }
         });
         mGridView.setAdapter(mImageAdapter);
+        mImageAdapter.setCallback(this);
         mGridView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
             public void onGlobalLayout() {
@@ -251,20 +252,22 @@ public class MultiImageSelectorFragment extends Fragment {
         mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                if(mImageAdapter.isShowCamera()){
-                    // 如果显示照相机，则第一个Grid显示为照相机，处理特殊逻辑
-                    if(i == 0){
-                        showCameraAction();
-                    }else{
-                        // 正常操作
-                        Image image = (Image) adapterView.getAdapter().getItem(i);
-                        selectImageFromGrid(image, mode);
-                    }
-                }else{
-                    // 正常操作
-                    Image image = (Image) adapterView.getAdapter().getItem(i);
-                    selectImageFromGrid(image, mode);
+                if(mImageAdapter.isShowCamera() && i==0){
+                    showCameraAction();
+                    return;
                 }
+                Image   item = mImageAdapter.getItem(i);
+                Intent  intent = new Intent(getActivity(),MulitImageBrowseActivity.class);
+                List<Image>  selectedImages= mImageAdapter.getmSelectedImages();
+                Images   images  = new Images();
+                images.setImages(selectedImages);
+
+                Images   previes = new Images();
+                previes.setImages(mImageAdapter.getmImages());
+                intent.putExtra("frist",item);
+                intent.putExtra("selected", images);
+                intent.putExtra("previe",previes);
+                startActivityForResult(intent, REQUEST_PREVIE);
             }
         });
 
@@ -354,6 +357,7 @@ public class MultiImageSelectorFragment extends Fragment {
             }
         }else if(requestCode == REQUEST_PREVIE){
             if(resultCode == Activity.RESULT_OK){
+                //已使用就无需再处理
                 Images   images = (Images)data.getSerializableExtra("result");
                 List<Image>  selectImages = images.getImages();
                 resultList.clear();
@@ -365,6 +369,20 @@ public class MultiImageSelectorFragment extends Fragment {
                 data.putStringArrayListExtra(MultiImageSelectorActivity.EXTRA_RESULT, resultList);
                 getActivity().setResult(Activity.RESULT_OK, data);
                 getActivity().finish();
+            }else if(resultCode == Activity.RESULT_CANCELED){
+                //如果是返回则需要刷新数据
+
+                Images   images = (Images)data.getSerializableExtra("result");
+                List<Image>  selectImages = images.getImages();
+                if(null != mCallback){
+                    mCallback.onAllResult(selectImages);
+                }
+                resultList.clear();
+                for(Image  image : selectImages){
+                    resultList.add(image.path);
+                }
+                mImageAdapter.setmSelectedImages(selectImages);
+                mImageAdapter.notifyDataSetChanged();
             }
         }
     }
@@ -552,8 +570,15 @@ public class MultiImageSelectorFragment extends Fragment {
         }
     };
 
-
-
+    @Override
+    public void onSelectItem(int postion) {
+        if(mImageAdapter.isShowCamera() && postion == 0){
+            return;
+        }
+        // 正常操作
+        Image image = mImageAdapter.getItem(postion);
+        selectImageFromGrid(image, mode);
+    }
 
     /**
      * 回调接口
@@ -563,11 +588,10 @@ public class MultiImageSelectorFragment extends Fragment {
         void onImageSelected(String path);
         void onImageUnselected(String path);
         void onCameraShot(File imageFile);
+        void onAllResult(List<Image>  images);
     }
 
-    public  interface  ACallback{
-        void   onSelectItem(String  path);
-    }
+
 
 
 }
