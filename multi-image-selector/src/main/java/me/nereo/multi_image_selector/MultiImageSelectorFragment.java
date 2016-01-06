@@ -70,6 +70,8 @@ public class MultiImageSelectorFragment extends Fragment {
     // 请求加载系统照相机
     private static final int REQUEST_CAMERA = 100;
 
+    private static  final int REQUEST_PREVIE= 101;
+
 
     // 结果数据
     private ArrayList<String> resultList = new ArrayList<>();
@@ -94,7 +96,7 @@ public class MultiImageSelectorFragment extends Fragment {
     // 底部View
     private View mPopupAnchorView;
 
-    private int mDesireImageCount;
+    public  static int mDesireImageCount;
 
     private boolean hasFolderGened = false;
     private boolean mIsShowCamera = false;
@@ -103,6 +105,7 @@ public class MultiImageSelectorFragment extends Fragment {
 
     private File mTmpFile;
 
+    public static int mode;
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
@@ -126,7 +129,7 @@ public class MultiImageSelectorFragment extends Fragment {
         mDesireImageCount = getArguments().getInt(EXTRA_SELECT_COUNT);
 
         // 图片选择模式
-        final int mode = getArguments().getInt(EXTRA_SELECT_MODE);
+        mode = getArguments().getInt(EXTRA_SELECT_MODE);
 
         // 默认选择
         if(mode == MODE_MULTI) {
@@ -184,8 +187,9 @@ public class MultiImageSelectorFragment extends Fragment {
                 List<Image>  selectedImages= mImageAdapter.getmSelectedImages();
                 Images   images  = new Images();
                 images.setImages(selectedImages);
-                intent.putExtra("selected",images);
-                startActivityForResult(intent, 2);
+                intent.putExtra("selected", images);
+                intent.putExtra("previe",images);
+                startActivityForResult(intent, REQUEST_PREVIE);
             }
         });
 
@@ -334,6 +338,7 @@ public class MultiImageSelectorFragment extends Fragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
         // 相机拍照完成后，返回图片路径
         if(requestCode == REQUEST_CAMERA){
             if(resultCode == Activity.RESULT_OK) {
@@ -346,6 +351,20 @@ public class MultiImageSelectorFragment extends Fragment {
                 if(mTmpFile != null && mTmpFile.exists()){
                     mTmpFile.delete();
                 }
+            }
+        }else if(requestCode == REQUEST_PREVIE){
+            if(resultCode == Activity.RESULT_OK){
+                Images   images = (Images)data.getSerializableExtra("result");
+                List<Image>  selectImages = images.getImages();
+                resultList.clear();
+                for(Image  image : selectImages){
+                    resultList.add(image.path);
+                }
+                // 返回已选择的图片数据
+                Intent resultdata = new Intent();
+                data.putStringArrayListExtra(MultiImageSelectorActivity.EXTRA_RESULT, resultList);
+                getActivity().setResult(Activity.RESULT_OK, data);
+                getActivity().finish();
             }
         }
     }
@@ -534,11 +553,7 @@ public class MultiImageSelectorFragment extends Fragment {
     };
 
 
-    @Override
-    public void startActivityForResult(Intent intent, int requestCode) {
-        super.startActivityForResult(intent, requestCode);
 
-    }
 
     /**
      * 回调接口
@@ -549,4 +564,10 @@ public class MultiImageSelectorFragment extends Fragment {
         void onImageUnselected(String path);
         void onCameraShot(File imageFile);
     }
+
+    public  interface  ACallback{
+        void   onSelectItem(String  path);
+    }
+
+
 }

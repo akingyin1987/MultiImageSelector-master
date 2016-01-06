@@ -1,6 +1,7 @@
 package me.nereo.multi_image_selector;
 
 
+import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -9,12 +10,13 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.view.ViewPager;
-import android.widget.AbsListView;
+
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
-
-import com.squareup.picasso.Picasso;
-
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,7 +28,7 @@ import me.nereo.multi_image_selector.bean.Images;
 /**
  * Created by zlcd on 2016/1/5.
  */
-public class MulitImageBrowseActivity  extends FragmentActivity {
+public class MulitImageBrowseActivity  extends FragmentActivity implements MultiImageSelectorFragment.Callback {
 
     private boolean hasFolderGened = false;
     private boolean mIsShowCamera = false;
@@ -42,13 +44,29 @@ public class MulitImageBrowseActivity  extends FragmentActivity {
     public ViewPager    viewPager;
 
     public TextView  tv_left;
+
+    public Button   commit;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Images   images = (Images)getIntent().getSerializableExtra("selected");
+        Images   preiveimages = (Images)getIntent().getSerializableExtra("previe");
         setContentView(R.layout.activity_viewpage_select);
         viewPager = (ViewPager)findViewById(R.id.view_pager);
         tv_left = (TextView)findViewById(R.id.tv_left);
+        commit = (Button)findViewById(R.id.commit);
+
+        commit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Images   images1 = new Images();
+                images1.setImages(adapter.getmSelectedImages());
+                Intent  intent = new Intent();
+                intent.putExtra("result",images1);
+                setResult(RESULT_OK, intent);
+                finish();
+            }
+        });
         viewPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
@@ -57,7 +75,7 @@ public class MulitImageBrowseActivity  extends FragmentActivity {
 
             @Override
             public void onPageSelected(int position) {
-                 tv_left.setText((position+1)+"/"+adapter.getCount());
+                tv_left.setText((position + 1) + "/" + adapter.getCount());
             }
 
             @Override
@@ -67,8 +85,20 @@ public class MulitImageBrowseActivity  extends FragmentActivity {
         });
         adapter=new ImageViewPageAdapter(this,null);
         viewPager.setAdapter(adapter);
+        adapter.setCallback(this);
+        adapter.setMaxSize(MultiImageSelectorFragment.mDesireImageCount);
         adapter.setmSelectedImages(images.getImages());
-        getSupportLoaderManager().initLoader(LOADER_ALL, null, mLoaderCallback);
+        if(MultiImageSelectorFragment.mode == MultiImageSelectorFragment.MODE_SINGLE){
+            commit.setText("使用");
+        }else{
+            commit.setText("完成("+images.getImages().size()+"/"+MultiImageSelectorFragment.mDesireImageCount+")");
+        }
+        adapter.setData(preiveimages.getImages());
+
+        if(adapter.getmSelectedImages().size()>0){
+            int postion = getSelectPostion(preiveimages.getImages(),adapter.getmSelectedImages().get(0));
+            viewPager.setCurrentItem(postion);
+        }
     }
 
     @Override
@@ -76,63 +106,7 @@ public class MulitImageBrowseActivity  extends FragmentActivity {
         super.onDestroy();
     }
 
-    private LoaderManager.LoaderCallbacks<Cursor> mLoaderCallback = new LoaderManager.LoaderCallbacks<Cursor>() {
 
-        private final String[] IMAGE_PROJECTION = {
-            MediaStore.Images.Media.DATA,
-            MediaStore.Images.Media.DISPLAY_NAME,
-            MediaStore.Images.Media.DATE_ADDED,
-            MediaStore.Images.Media._ID };
-
-        @Override
-        public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-            if(id == LOADER_ALL) {
-                CursorLoader cursorLoader = new CursorLoader(MulitImageBrowseActivity.this,
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI, IMAGE_PROJECTION,
-                    null, null, IMAGE_PROJECTION[2] + " DESC");
-                return cursorLoader;
-            }else if(id == LOADER_CATEGORY){
-                CursorLoader cursorLoader = new CursorLoader(MulitImageBrowseActivity.this,
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI, IMAGE_PROJECTION,
-                    IMAGE_PROJECTION[0]+" like '%"+args.getString("path")+"%'", null, IMAGE_PROJECTION[2] + " DESC");
-                return cursorLoader;
-            }
-
-            return null;
-        }
-
-        @Override
-        public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-            if (data != null) {
-                List<Image> images = new ArrayList<>();
-                int count = data.getCount();
-                if (count > 0) {
-                    data.moveToFirst();
-                    do{
-                        String path = data.getString(data.getColumnIndexOrThrow(IMAGE_PROJECTION[0]));
-                        String name = data.getString(data.getColumnIndexOrThrow(IMAGE_PROJECTION[1]));
-                        long dateTime = data.getLong(data.getColumnIndexOrThrow(IMAGE_PROJECTION[2]));
-                        Image image = new Image(path, name, dateTime);
-                        images.add(image);
-                    }while(data.moveToNext());
-                    System.out.println("size==="+images.size());
-
-                    adapter.setData(images);
-                    hasFolderGened = true;
-                    if(adapter.getmSelectedImages().size()>0){
-                        int postion = getSelectPostion(images,adapter.getmSelectedImages().get(0));
-                        viewPager.setCurrentItem(postion);
-                    }
-
-                }
-            }
-        }
-
-        @Override
-        public void onLoaderReset(Loader<Cursor> loader) {
-
-        }
-    };
 
 
     public   int   getSelectPostion(List<Image> items,Image  image){
@@ -148,4 +122,23 @@ public class MulitImageBrowseActivity  extends FragmentActivity {
     }
 
 
+    @Override
+    public void onSingleImageSelected(String path) {
+
+    }
+
+    @Override
+    public void onImageSelected(String path) {
+        commit.setText("完成("+adapter.getmSelectedImages().size()+"/"+MultiImageSelectorFragment.mDesireImageCount+")");
+    }
+
+    @Override
+    public void onImageUnselected(String path) {
+        Toast.makeText(this,"选择数已超过最大数!",Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onCameraShot(File imageFile) {
+
+    }
 }

@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import me.nereo.multi_image_selector.MultiImageSelectorFragment;
 import me.nereo.multi_image_selector.R;
 import me.nereo.multi_image_selector.bean.Image;
 
@@ -41,6 +42,26 @@ public class ImageViewPageAdapter  extends PagerAdapter {
 
     public void setmSelectedImages(List<Image> mSelectedImages) {
         this.mSelectedImages = mSelectedImages;
+    }
+
+    private MultiImageSelectorFragment.Callback   callback;
+
+    public MultiImageSelectorFragment.Callback getCallback() {
+        return callback;
+    }
+
+    public void setCallback(MultiImageSelectorFragment.Callback callback) {
+        this.callback = callback;
+    }
+
+    private    int    maxSize;
+
+    public int getMaxSize() {
+        return maxSize;
+    }
+
+    public void setMaxSize(int maxSize) {
+        this.maxSize = maxSize;
     }
 
     public   void   addSelectedImages(List<Image> images){
@@ -98,10 +119,24 @@ public class ImageViewPageAdapter  extends PagerAdapter {
                 @Override
                 public void onClick(View v) {
                     if(mSelectedImages.contains(image)){
+                        System.out.println("已存在");
                         mSelectedImages.remove(image);
-
+                        if(null != callback){
+                            callback.onImageSelected(null);
+                        }
                     }else{
+                        if(mSelectedImages.size() >= maxSize){
+                            if(null != callback){
+                                callback.onImageUnselected(null);
+                            }
+                            return;
+                        }
                         mSelectedImages.add(image);
+                        System.out.println("不存在");
+                        if(null != callback){
+                            callback.onImageSelected(null);
+                        }
+
 
                     }
                 }
@@ -109,7 +144,7 @@ public class ImageViewPageAdapter  extends PagerAdapter {
             holde.imageView=(ImageView)view.findViewById(R.id.image);
             ((ViewPager)container).addView(view, 0);
             mImageViews[position % mImageViews.length]=holde;
-        }else{
+        } else {
             ((ViewPager)container).removeView(holde.view);
             ((ViewPager)container).addView(holde.view, 0);
         }
