@@ -206,29 +206,31 @@ public class ImageGridAdapter extends BaseAdapter {
         int type = getItemViewType(i);
         if(type == TYPE_CAMERA){
             view = mInflater.inflate(R.layout.list_item_camera, viewGroup, false);
+            view.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(null !=callback){
+                        callback.onSelectItem(0,1);
+                    }
+                }
+            });
             view.setTag(null);
         }else if(type == TYPE_NORMAL){
             ViewHolde holde;
             if(view == null){
                 view = mInflater.inflate(R.layout.list_item_image, viewGroup, false);
                 holde = new ViewHolde(view);
-                holde.indicator.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if(null !=callback){
-                            callback.onSelectItem(i);
-                        }
-                    }
-                });
+
             }else{
                 holde = (ViewHolde) view.getTag();
                 if(holde == null){
                     view = mInflater.inflate(R.layout.list_item_image, viewGroup, false);
                     holde = new ViewHolde(view);
+
                 }
             }
             if(holde != null) {
-                holde.bindData(getItem(i));
+                holde.bindData(getItem(i),i);
             }
         }
 
@@ -242,21 +244,39 @@ public class ImageGridAdapter extends BaseAdapter {
     }
 
     class ViewHolde {
-        ImageView image;
-        ImageView indicator;
-        View mask;
+         ImageView image;
+         ImageView indicator;
+         View mask;
          Image   imagebean;
+          int  itempostion;
 
         ViewHolde(View view){
             image = (ImageView) view.findViewById(R.id.image);
             indicator = (ImageView) view.findViewById(R.id.checkmark);
             mask = view.findViewById(R.id.mask);
             view.setTag(this);
-
+            image.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(null !=callback){
+                        callback.onSelectItem(itempostion,1);
+                    }
+                }
+            });
+            indicator.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (null != callback) {
+                        callback.onSelectItem(itempostion, 0);
+                    }
+                }
+            });
         }
 
-        void bindData( Image data){
+        void bindData( Image data,int postion){
             imagebean = data;
+            itempostion = postion;
+
             if(imagebean == null) return;
             // 处理单选和多选状态
             if(showSelectIndicator){

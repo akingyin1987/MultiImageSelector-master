@@ -10,6 +10,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
@@ -30,6 +31,10 @@ import android.widget.GridView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.afollestad.materialcamera.MaterialCamera;
+import com.jmolsmobile.landscapevideocapture.VideoCaptureActivity;
+import com.jmolsmobile.landscapevideocapture.configuration.CaptureConfiguration;
+import com.jmolsmobile.landscapevideocapture.configuration.PredefinedCaptureConfigurations;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
@@ -249,27 +254,27 @@ public class MultiImageSelectorFragment extends Fragment implements ACallback {
                 }
             }
         });
-        mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                if(mImageAdapter.isShowCamera() && i==0){
-                    showCameraAction();
-                    return;
-                }
-                Image   item = mImageAdapter.getItem(i);
-                Intent  intent = new Intent(getActivity(),MulitImageBrowseActivity.class);
-                List<Image>  selectedImages= mImageAdapter.getmSelectedImages();
-                Images   images  = new Images();
-                images.setImages(selectedImages);
-
-                Images   previes = new Images();
-                previes.setImages(mImageAdapter.getmImages());
-                intent.putExtra("frist",item);
-                intent.putExtra("selected", images);
-                intent.putExtra("previe",previes);
-                startActivityForResult(intent, REQUEST_PREVIE);
-            }
-        });
+//        mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+//            @Override
+//            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+//                if(mImageAdapter.isShowCamera() && i==0){
+//                    showCameraAction();
+//                    return;
+//                }
+//                Image   item = mImageAdapter.getItem(i);
+//                Intent  intent = new Intent(getActivity(),MulitImageBrowseActivity.class);
+//                List<Image>  selectedImages= mImageAdapter.getmSelectedImages();
+//                Images   images  = new Images();
+//                images.setImages(selectedImages);
+//
+//                Images   previes = new Images();
+//                previes.setImages(mImageAdapter.getmImages());
+//                intent.putExtra("frist",item);
+//                intent.putExtra("selected", images);
+//                intent.putExtra("previe",previes);
+//                startActivityForResult(intent, REQUEST_PREVIE);
+//            }
+//        });
 
         mFolderAdapter = new FolderAdapter(getActivity());
     }
@@ -383,6 +388,13 @@ public class MultiImageSelectorFragment extends Fragment implements ACallback {
                 }
                 mImageAdapter.setmSelectedImages(selectImages);
                 mImageAdapter.notifyDataSetChanged();
+                if(resultList.size() != 0) {
+                    mPreviewBtn.setEnabled(true);
+                    mPreviewBtn.setText(getResources().getString(R.string.preview) + "(" + resultList.size() + ")");
+                }else{
+                    mPreviewBtn.setEnabled(false);
+                    mPreviewBtn.setText(R.string.preview);
+                }
             }
         }
     }
@@ -429,11 +441,19 @@ public class MultiImageSelectorFragment extends Fragment implements ACallback {
 
     }
 
+    private final static int CAMERA_RQ = 6969;
+
     /**
      * 选择相机
      */
     private void showCameraAction() {
-        // 跳转到系统照相机
+
+//        Intent intent = new Intent(getActivity(), VideoCaptureActivity.class);
+//        intent.putExtra(VideoCaptureActivity.EXTRA_CAPTURE_CONFIGURATION, createCaptureConfiguration());
+//        intent.putExtra(VideoCaptureActivity.EXTRA_OUTPUT_FILENAME, "1.jpg");
+//        startActivityForResult(intent, CAMERA_RQ);
+
+//        // 跳转到系统照相机
         Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if(cameraIntent.resolveActivity(getActivity().getPackageManager()) != null){
             // 设置系统相机拍照后的输出路径
@@ -445,6 +465,18 @@ public class MultiImageSelectorFragment extends Fragment implements ACallback {
             Toast.makeText(getActivity(), R.string.msg_no_camera, Toast.LENGTH_SHORT).show();
         }
     }
+    private CaptureConfiguration createCaptureConfiguration() {
+        final PredefinedCaptureConfigurations.CaptureResolution resolution = PredefinedCaptureConfigurations.CaptureResolution.RES_480P;
+        final PredefinedCaptureConfigurations.CaptureQuality quality = PredefinedCaptureConfigurations.CaptureQuality.HIGH;
+        int fileDuration = CaptureConfiguration.NO_DURATION_LIMIT;
+
+        int filesize = CaptureConfiguration.NO_FILESIZE_LIMIT;
+
+        final CaptureConfiguration config = new CaptureConfiguration(resolution, quality, fileDuration, filesize);
+        return config;
+    }
+
+
 
     /**
      * 选择图片操作
@@ -571,8 +603,25 @@ public class MultiImageSelectorFragment extends Fragment implements ACallback {
     };
 
     @Override
-    public void onSelectItem(int postion) {
-        if(mImageAdapter.isShowCamera() && postion == 0){
+    public void onSelectItem(int postion,int type) {
+        System.out.println("select=="+postion+":"+type);
+        if(mImageAdapter.isShowCamera() && postion == 0 && type == 1){
+            showCameraAction();
+            return;
+        }
+        if(type == 1){
+            Image   item = mImageAdapter.getItem(postion);
+            Intent  intent = new Intent(getActivity(),MulitImageBrowseActivity.class);
+            List<Image>  selectedImages= mImageAdapter.getmSelectedImages();
+            Images   images  = new Images();
+            images.setImages(selectedImages);
+
+            Images   previes = new Images();
+            previes.setImages(mImageAdapter.getmImages());
+            intent.putExtra("frist",item);
+            intent.putExtra("selected", images);
+            intent.putExtra("previe",previes);
+            startActivityForResult(intent, REQUEST_PREVIE);
             return;
         }
         // 正常操作

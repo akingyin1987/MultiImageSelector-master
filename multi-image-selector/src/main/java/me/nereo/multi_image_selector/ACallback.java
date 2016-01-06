@@ -5,6 +5,6 @@ package me.nereo.multi_image_selector;
  */
 public interface ACallback {
 
-        void   onSelectItem(int  postion);
+        void   onSelectItem(int  postion,int type);
 
 }

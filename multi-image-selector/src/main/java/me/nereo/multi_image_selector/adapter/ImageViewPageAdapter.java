@@ -132,6 +132,7 @@ public class ImageViewPageAdapter  extends PagerAdapter {
             holde = new ViewHolder();
             holde.view = view;
             holde.checkBox = (CheckBox)view.findViewById(R.id.checkmark);
+
             holde.checkBox.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
